@@ -19,6 +19,6 @@ export class UploadService {
   uploadFile(file: File): Observable<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<UploadResponse>(this.baseUrl, formData);
+    return this.http.post<UploadResponse>(`${this.baseUrl}/upload`, formData);
   }
 }
