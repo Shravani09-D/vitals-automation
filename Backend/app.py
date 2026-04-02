@@ -81,11 +81,10 @@ def upload_file():
             return jsonify({"error": "Output file was not created"}), 500
 
         return jsonify({
-            "message": "File processed successfully",
-            "output_file": output_filename,
-            "download_url": f"http://127.0.0.1:5000/download/{output_filename}"
-        }), 200
-
+    "message": "File processed successfully",
+    "output_file": output_filename,
+    "download_url": f"{request.host_url}download/{output_filename}"
+}), 200
     except Exception as e:
         print("=== BACKEND ERROR ===")
         traceback.print_exc()

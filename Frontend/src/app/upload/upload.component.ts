@@ -25,7 +25,8 @@ export class UploadComponent {
   toastMessage = '';
   toastType: 'success' | 'error' | '' = '';
 
-  constructor(private uploadService: UploadService,
+  constructor(
+    private uploadService: UploadService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -71,8 +72,8 @@ export class UploadComponent {
           this.downloadUrl = response.download_url || '';
 
           if (this.downloadUrl) {
-  this.showToast('File processed successfully.', 'success');
-}
+            this.downloadFile(this.downloadUrl, this.outputFile);
+          }
 
           this.showToast(
             this.outputFile
@@ -90,6 +91,21 @@ export class UploadComponent {
           this.resetFileInput();
         }
       });
+  }
+
+  downloadFile(url: string, filename?: string): void {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+
+    if (filename) {
+      link.download = filename;
+    }
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   showToast(message: string, type: 'success' | 'error'): void {
