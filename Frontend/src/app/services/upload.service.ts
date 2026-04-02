@@ -12,7 +12,7 @@ export interface UploadResponse {
   providedIn: 'root'
 })
 export class UploadService {
-  private baseUrl = 'http://127.0.0.1:5000/upload';
+  private baseUrl = 'https://vitals-backend-rs89.onrender.com';
 
   constructor(private http: HttpClient) {}
 
