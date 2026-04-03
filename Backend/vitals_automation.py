@@ -785,19 +785,22 @@ def main():
 
 
 def process_file(input_path, output_path):
-    full_text = read_docx_text(input_path)
-    if not full_text:
-        raise Exception("No text found in file")
+    text = read_file(input_path)
+    print("=== EXTRACTED TEXT LENGTH ===", len(text) if text else 0)
 
-    medical_text = get_medical_records_section(full_text)
-    records = split_records_from_text(medical_text)
+    if not text or not text.strip():
+        raise Exception("No text extracted from file")
+
+    records = split_records(text)
+    print("=== TOTAL RECORDS FOUND ===", len(records))
+
     processed = process_records(records)
+    print("=== PROCESSED RECORDS ===", len(processed))
 
     if not processed:
         raise Exception("No medical records extracted")
 
-    create_word_table(processed, output_path)
-
+    save_output(processed, output_path)
 
 if __name__ == "__main__":
     main()

@@ -19,7 +19,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"docx"}
-app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB
+app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 200 MB
 
 
 def allowed_file(filename):
@@ -44,47 +44,22 @@ def upload_file():
         if file.filename == "":
             return jsonify({"error": "No selected file"}), 400
 
-        if not allowed_file(file.filename):
-            return jsonify({"error": "Only DOCX files are allowed"}), 400
+        filename = secure_filename(file.filename)
+        input_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(input_path)
 
-        original_filename = secure_filename(file.filename)
-        base_name = os.path.splitext(original_filename)[0]
+        output_path = os.path.join(OUTPUT_FOLDER, filename.rsplit(".", 1)[0] + "_output.docx")
 
-        # create temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as temp_input:
-            file.save(temp_input.name)
-            input_path = temp_input.name
+        print("=== FILE RECEIVED ===", filename)
+        print("=== INPUT PATH ===", input_path)
 
-        # output file (same as before)
-        output_filename = f"{base_name}_output.docx"
-        output_path = os.path.join(OUTPUT_FOLDER, output_filename)
-
-        # remove old output if exists
-        if os.path.exists(output_path):
-            try:
-                os.remove(output_path)
-            except PermissionError:
-                return jsonify({
-                    "error": f"Close the file before processing: {output_filename}"
-                }), 400
-
-        # process file
         process_file(input_path, output_path)
 
-        # delete temp file AFTER processing
-        try:
-            os.remove(input_path)
-        except:
-            pass
-
-        if not os.path.exists(output_path):
-            return jsonify({"error": "Output file was not created"}), 500
-
         return jsonify({
-    "message": "File processed successfully",
-    "output_file": output_filename,
-    "download_url": f"{request.host_url}download/{output_filename}"
-}), 200
+            "message": "File processed successfully",
+            "download": f"/download/{os.path.basename(output_path)}"
+        }), 200
+
     except Exception as e:
         print("=== BACKEND ERROR ===")
         traceback.print_exc()
@@ -100,4 +75,4 @@ def download_file(filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
