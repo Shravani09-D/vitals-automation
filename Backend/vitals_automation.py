@@ -38,7 +38,7 @@ NAME_TOKEN_REGEX = re.compile(
 )
 
 DATE_RECORD_REGEX = re.compile(
-    r'(?=(?:^|\n)\s*\d{1,2}/\d{1,2}/(?:\d{2,4})?\.)',
+    r'(?=(?:^|\n)\s*\d{1,2}/\d{1,2}/(?:\d{2}|\d{4})\.?)',
     re.MULTILINE
 )
 
@@ -117,7 +117,7 @@ def split_records_from_text(text):
         record_text_clean = clean_spaces(record_text)
         before_context_clean = clean_spaces(before_context)
 
-        if re.match(r'^\d{1,2}/\d{1,2}/(?:\d{2,4})?\.', record_text_clean):
+        if extract_date(record_text_clean):
             records.append({
                 "record_text": record_text_clean,
                 "before_context": before_context_clean
@@ -130,14 +130,10 @@ def split_records_from_text(text):
 # 4. DATE EXTRACTION
 # ==============================
 def extract_date(record):
-    m = re.match(r'^\s*(\d{1,2}/\d{1,2}/(?:\d{2,4})?)\.', record)
-    if not m:
-        return ""
-
-    date = m.group(1)
-    if re.match(r'^\d{1,2}/\d{1,2}/$', date):
-        return date + "00"
-    return date
+    m = re.search(r'^\s*(\d{1,2}/\d{1,2}/(?:\d{2}|\d{4}))\.?', record)
+    if m:
+        return m.group(1)
+    return ""
 
 
 # ==============================
