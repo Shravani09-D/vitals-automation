@@ -670,6 +670,11 @@ def normalize_date(date_str):
 # ==============================
 def process_records(records):
     output = []
+    processed = []
+
+for i, record in enumerate(records, 1):
+        print(f"=== CHECKING RECORD {i} ===")
+        print(record[:300])
 
     for item in records:
         record_text = item["record_text"]
@@ -701,7 +706,7 @@ def process_records(records):
 
     output.sort(key=lambda x: normalize_date(x["Date"]) or datetime.max)
     return output
-
+return processed
 
 # ==============================
 # 11. WORD TABLE
@@ -785,22 +790,27 @@ def main():
 
 
 def process_file(input_path, output_path):
-    text = read_file(input_path)
-    print("=== EXTRACTED TEXT LENGTH ===", len(text) if text else 0)
+    print("=== PROCESS FILE START ===")
+    print("INPUT:", input_path)
+    print("OUTPUT:", output_path)
+
+    text = read_docx(input_path)   # or your read_file logic
+    print("=== TEXT LENGTH ===", len(text) if text else 0)
 
     if not text or not text.strip():
         raise Exception("No text extracted from file")
 
     records = split_records(text)
-    print("=== TOTAL RECORDS FOUND ===", len(records))
+    print("=== RECORD COUNT ===", len(records))
 
     processed = process_records(records)
-    print("=== PROCESSED RECORDS ===", len(processed))
+    print("=== PROCESSED COUNT ===", len(processed))
 
     if not processed:
         raise Exception("No medical records extracted")
 
     save_output(processed, output_path)
+    print("=== PROCESS FILE END ===")
 
 if __name__ == "__main__":
     main()
