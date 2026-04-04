@@ -1,8 +1,12 @@
-<!-- NAVBAR -->
-<nav class="navbar">
-  <div class="logo-section">
-    <img src="assets/logo.png" class="logo" />
-    <span class="brand">Bharari Digital Solutions</span>
+<nav class="topbar">
+  <div class="brand-wrap">
+    <div class="logo-box">
+      <img src="assets/logo.png" alt="Bharari Logo" class="logo" />
+    </div>
+    <div class="brand-text">
+      <h1>Bharari Digital Solutions</h1>
+      <p>Medical Record Processing Portal</p>
+    </div>
   </div>
 </nav>
 
@@ -11,25 +15,42 @@
 </div>
 
 <div class="page">
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
   <div class="upload-card">
-    <h2>Medical Record Upload</h2>
-    <p class="sub-text">Upload a medical record file for processing</p>
+    <div class="card-header">
+      <div class="icon-circle">📄</div>
+      <h2>Medical Record Upload</h2>
+      <p class="sub-text">Upload a DOCX medical record file for secure processing</p>
+    </div>
 
-    <input
-      #fileInput
-      type="file"
-      accept=".docx"
-      (change)="onFileSelected($event)"
-    />
+    <div class="upload-area">
+      <label for="fileUpload" class="custom-file-upload">
+        <span class="upload-icon">⬆</span>
+        <span class="upload-title">Choose File</span>
+        <span class="upload-desc">
+          {{ selectedFile?.name ? selectedFile?.name : 'Only .docx files are allowed' }}
+        </span>
+      </label>
 
-    <button type="button" (click)="onUpload()" [disabled]="isLoading">
+      <input
+        #fileInput
+        id="fileUpload"
+        type="file"
+        accept=".docx"
+        (change)="onFileSelected($event)"
+      />
+    </div>
+
+    <button type="button" class="upload-btn" (click)="onUpload()" [disabled]="isLoading">
       <span *ngIf="!isLoading">Upload and Process</span>
       <span *ngIf="isLoading" class="loader"></span>
     </button>
 
     <div *ngIf="message" class="success-box">
       <p><strong>{{ message }}</strong></p>
-      <p *ngIf="outputFile">Output File: {{ outputFile }}</p>
+      <p *ngIf="outputFile" class="file-name">Output File: {{ outputFile }}</p>
       <a *ngIf="downloadUrl" href="#" (click)="downloadAgain($event)">Download Again</a>
     </div>
 
@@ -39,7 +60,6 @@
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer class="footer">
-  © 2026 Bharari Digital Solutions
+  <p>© 2026 Bharari Digital Solutions. All rights reserved.</p>
 </footer>
