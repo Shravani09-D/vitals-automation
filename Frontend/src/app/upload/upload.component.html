@@ -22,9 +22,7 @@
     <div *ngIf="message" class="success-box">
       <p><strong>{{ message }}</strong></p>
       <p *ngIf="outputFile">Output File: {{ outputFile }}</p>
-      <a *ngIf="downloadUrl" href="javascript:void(0)" (click)="downloadAgain()">
-  Download Again
-</a>
+      <a *ngIf="downloadUrl" href="#" (click)="downloadAgain($event)">Download Again</a>
     </div>
 
     <div *ngIf="error" class="error-box">

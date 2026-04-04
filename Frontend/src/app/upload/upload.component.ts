@@ -64,7 +64,7 @@ export class UploadComponent {
         })
       )
       .subscribe({
-        next: async (response: UploadResponse) => {
+        next: (response: UploadResponse) => {
           console.log('Upload success:', response);
 
           this.message = response.message || 'File processed successfully.';
@@ -72,7 +72,7 @@ export class UploadComponent {
           this.downloadUrl = response.download_url || '';
 
           if (this.downloadUrl && this.outputFile) {
-            await this.downloadFile(this.downloadUrl, this.outputFile);
+            this.downloadFile(this.downloadUrl, this.outputFile);
             this.showToast(`Downloaded: ${this.outputFile}`, 'success');
           } else {
             this.showToast('File processed but download link is missing.', 'error');
@@ -90,14 +90,15 @@ export class UploadComponent {
   }
 
   downloadFile(url: string, filename?: string): void {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename || 'output.docx';
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'output.docx';
+    link.target = '_self';
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   downloadAgain(event?: Event): void {
     if (event) {
