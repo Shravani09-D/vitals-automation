@@ -229,7 +229,7 @@ input[type="file"] {
   font-size: 15px;
   font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #93c5fd, #a5b4fc);
+  background: #764ba2;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 10px 22px rgba(165, 180, 252, 0.24);
