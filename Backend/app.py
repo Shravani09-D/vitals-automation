@@ -3,10 +3,12 @@ import traceback
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from vitals_automation import process_file
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -54,7 +56,7 @@ def upload_file():
 
         scheme = request.headers.get("X-Forwarded-Proto", request.scheme)
         host = request.headers.get("Host", request.host)
-        download_url = request.host_url.rstrip("/") + "/download/" + output_filename
+        download_url = f"{scheme}://{host}/download/{output_filename}"
 
         return jsonify({
             "message": "File processed successfully",

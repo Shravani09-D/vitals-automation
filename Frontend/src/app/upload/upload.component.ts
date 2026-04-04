@@ -89,31 +89,15 @@ export class UploadComponent {
       });
   }
 
-  async downloadFile(url: string, filename?: string): Promise<void> {
-    try {
-      const response = await fetch(url);
+  downloadFile(url: string, filename?: string): void {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || 'output.docx';
 
-      if (!response.ok) {
-        throw new Error('Failed to download file');
-      }
-
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename || 'output.docx';
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error('Download failed:', error);
-      this.showToast('Download failed.', 'error');
-    }
-  }
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
   downloadAgain(event?: Event): void {
     if (event) {
