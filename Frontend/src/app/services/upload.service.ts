@@ -12,7 +12,7 @@ export interface UploadResponse {
   providedIn: 'root'
 })
 export class UploadService {
-  private baseUrl = 'https://vitals-backend-rs89.onrender.com';
+  private baseUrl = ' https://demiurgically-lunchless-jacquie.ngrok-free.dev';
 
   constructor(private http: HttpClient) {}
 

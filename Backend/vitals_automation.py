@@ -38,7 +38,7 @@ NAME_TOKEN_REGEX = re.compile(
 )
 
 DATE_RECORD_REGEX = re.compile(
-    r'(?=(?:^|\n)\s*\d{1,2}/\d{1,2}/(?:\d{2}|\d{4})\.?)',
+    r'(?=(?:^|\n)\s*\d{1,2}/\d{1,2}/(?:\d{2,4})?\.)',
     re.MULTILINE
 )
 
@@ -48,13 +48,6 @@ STRENGTH_UNIT_PATTERN = (
 )
 
 STRENGTH_PATTERN = rf'\b\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?\s*{STRENGTH_UNIT_PATTERN}\b'
-
-
-# ==============================
-# COMMON CLEANER
-# ==============================
-def clean_spaces(text):
-    return " ".join(str(text).split()).strip()
 
 
 # ==============================
@@ -112,12 +105,14 @@ def split_records_from_text(text):
         end = starts[i + 1] if i + 1 < len(starts) else len(text)
 
         record_text = text[start:end].strip()
+
+        # important: keep enough text before record for names on prior line
         before_context = text[max(0, start - 300):start].strip()
 
-        record_text_clean = clean_spaces(record_text)
-        before_context_clean = clean_spaces(before_context)
+        record_text_clean = " ".join(record_text.split()).strip()
+        before_context_clean = " ".join(before_context.split()).strip()
 
-        if extract_date(record_text_clean):
+        if re.match(r'^\d{1,2}/\d{1,2}/(?:\d{2,4})?\.', record_text_clean):
             records.append({
                 "record_text": record_text_clean,
                 "before_context": before_context_clean
@@ -130,10 +125,14 @@ def split_records_from_text(text):
 # 4. DATE EXTRACTION
 # ==============================
 def extract_date(record):
-    m = re.search(r'^\s*(\d{1,2}/\d{1,2}/(?:\d{2}|\d{4}))\.?', record)
-    if m:
-        return m.group(1)
-    return ""
+    m = re.match(r'^\s*(\d{1,2}/\d{1,2}/(?:\d{2,4})?)\.', record)
+    if not m:
+        return ""
+
+    date = m.group(1)
+    if re.match(r'^\d{1,2}/\d{1,2}/$', date):
+        return date + "00"
+    return date
 
 
 # ==============================
@@ -151,11 +150,13 @@ def extract_provider(record_text, before_context=""):
     record_text = clean_spaces(record_text)
     before_context = clean_spaces(before_context)
 
+    # 1. explicit unknown provider
     if re.search(r'\bUnknown\s+Provider\b', record_text, re.IGNORECASE):
         return "Unknown Provider"
 
     full_text = f"{before_context}\n{record_text}".strip()
 
+    # provider name + degree
     provider_pattern = re.compile(
         rf"""
         \b
@@ -167,6 +168,7 @@ def extract_provider(record_text, before_context=""):
         re.VERBOSE | re.IGNORECASE
     )
 
+    # common non-provider words to reject
     bad_provider_words = {
         "medical", "center", "clinic", "foundation", "hospital",
         "care", "group", "corporation", "services", "report",
@@ -184,18 +186,26 @@ def extract_provider(record_text, before_context=""):
             return ""
         return provider
 
+    # 2. FIRST: provider in before_context line above the record
+    # Example:
+    # Karita Goulbourne, MD
+    # 03/22/12. ED Provider Note...
     context_matches = provider_pattern.findall(before_context)
     for name, degree in reversed(context_matches):
         provider = valid_provider(name, degree)
         if provider:
             return provider
 
+    # 3. SECOND: provider inside the current record
+    # Example:
+    # 05/20/20. UNIVERSAL INDUSTRIAL CARE. Oscar Tuazon, MD...
     record_matches = provider_pattern.findall(record_text)
     for name, degree in record_matches:
         provider = valid_provider(name, degree)
         if provider:
             return provider
 
+    # 4. THIRD: search combined text as fallback
     all_matches = provider_pattern.findall(full_text)
     for name, degree in all_matches:
         provider = valid_provider(name, degree)
@@ -323,6 +333,10 @@ ACTION_WORDS = [
     "continued", "refilled", "take", "use", "apply", "instill",
     "inject", "treated with", "discharged with", "start"
 ]
+
+
+def clean_spaces(text):
+    return " ".join(text.split()).strip()
 
 
 def split_med_sentences(text):
@@ -513,6 +527,7 @@ def extract_candidate_meds_regex(section_text, section_label=""):
     sentences = split_med_sentences(section_text)
 
     for sent in sentences:
+        # 1. name + strength
         for m in re.finditer(
             rf'\b([A-Za-z][A-Za-z0-9\-]*(?:\s+[A-Za-z][A-Za-z0-9\-]*){{0,2}})\s+({STRENGTH_PATTERN})',
             sent,
@@ -522,6 +537,7 @@ def extract_candidate_meds_regex(section_text, section_label=""):
             if med:
                 candidates.append(med)
 
+        # 2. medication sections: split all pieces
         if section_label.lower() in ["current medications", "medications"]:
             parts = re.split(r'[;,\n]+', sent)
 
@@ -534,6 +550,7 @@ def extract_candidate_meds_regex(section_text, section_label=""):
                 if med:
                     candidates.append(med)
 
+        # 3. plan / discussion: action-based extraction
         else:
             for m in re.finditer(
                 rf'(?:{"|".join([re.escape(x) for x in ACTION_WORDS])})\s+'
@@ -590,19 +607,6 @@ def is_medical_record(record_text, before_context=""):
     ]
     for x in excluded:
         if x in rec:
-            return False
-
-    # explicitly skip x-ray type records if you do not want them
-    xray_words = [
-        "x-ray",
-        "xray",
-        "radiograph",
-        "radiology report",
-        "mri",
-        "ct scan"
-    ]
-    if any(x in rec for x in xray_words):
-        if not any(k in rec for k in ["vitals", "medications", "plan:", "chief complaint", "hpi", "progress note"]):
             return False
 
     included = [
@@ -667,15 +671,11 @@ def normalize_date(date_str):
 def process_records(records):
     output = []
 
-    for i, item in enumerate(records, 1):
+    for item in records:
         record_text = item["record_text"]
         before_context = item.get("before_context", "")
 
-        print(f"=== CHECKING RECORD {i} ===")
-        print(record_text[:300])
-
         if not is_medical_record(record_text, before_context):
-            print(f"=== RECORD {i} SKIPPED ===")
             continue
 
         row = {
@@ -695,13 +695,9 @@ def process_records(records):
             row["Spo2"],
             row["Sugar"],
             row["A1c"],
-            row["Medication"],
-            row["Provider"] != "Unknown Provider"
+            row["Medication"]
         ]):
             output.append(row)
-            print(f"=== RECORD {i} ACCEPTED ===")
-        else:
-            print(f"=== RECORD {i} EMPTY AFTER EXTRACTION ===")
 
     output.sort(key=lambda x: normalize_date(x["Date"]) or datetime.max)
     return output
@@ -749,40 +745,7 @@ def create_word_table(data, output_file):
 
 
 # ==============================
-# 12. MAIN FILE PROCESSOR
-# ==============================
-def process_file(input_path, output_path):
-    print("=== PROCESS FILE START ===")
-    print("INPUT:", input_path)
-    print("OUTPUT:", output_path)
-
-    text = read_docx_text(input_path)
-    print("=== TEXT LENGTH ===", len(text) if text else 0)
-
-    if not text or not text.strip():
-        raise Exception("No text extracted from file")
-
-    medical_text = get_medical_records_section(text)
-    print("=== MEDICAL TEXT LENGTH ===", len(medical_text) if medical_text else 0)
-
-    records = split_records_from_text(medical_text)
-    print("=== RECORD COUNT ===", len(records))
-
-    if not records:
-        raise Exception("No dated records found in file")
-
-    processed = process_records(records)
-    print("=== PROCESSED COUNT ===", len(processed))
-
-    if not processed:
-        raise Exception("No medical records extracted")
-
-    create_word_table(processed, output_path)
-    print("=== PROCESS FILE END ===")
-
-
-# ==============================
-# 13. CLI MAIN
+# 12. MAIN
 # ==============================
 def main():
     if len(sys.argv) < 2:
@@ -800,8 +763,40 @@ def main():
     os.makedirs(output_folder, exist_ok=True)
     output_file = os.path.join(output_folder, f"{base_name}_output.docx")
 
-    process_file(input_file, output_file)
+    full_text = read_docx_text(input_file)
+    if not full_text:
+        print("❌ No text found in file.")
+        return
+
+    medical_text = get_medical_records_section(full_text)
+    records = split_records_from_text(medical_text)
+
+    print(f"Total records found: {len(records)}")
+
+    processed = process_records(records)
+    print(f"Medical rows extracted: {len(processed)}")
+
+    if not processed:
+        print("❌ No medical records extracted.")
+        return
+
+    create_word_table(processed, output_file)
     print(f"✅ Output saved in outputs folder: {output_file}")
+
+
+def process_file(input_path, output_path):
+    full_text = read_docx_text(input_path)
+    if not full_text:
+        raise Exception("No text found in file")
+
+    medical_text = get_medical_records_section(full_text)
+    records = split_records_from_text(medical_text)
+    processed = process_records(records)
+
+    if not processed:
+        raise Exception("No medical records extracted")
+
+    create_word_table(processed, output_path)
 
 
 if __name__ == "__main__":

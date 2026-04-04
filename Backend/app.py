@@ -1,7 +1,5 @@
 import os
 import traceback
-import tempfile
-from uuid import uuid4
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -19,7 +17,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"docx"}
-app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 200 MB
+app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB
 
 
 def allowed_file(filename):
@@ -30,8 +28,6 @@ def allowed_file(filename):
 def home():
     return jsonify({"message": "Backend running"}), 200
 
-
-import tempfile
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -44,20 +40,29 @@ def upload_file():
         if file.filename == "":
             return jsonify({"error": "No selected file"}), 400
 
+        if not allowed_file(file.filename):
+            return jsonify({"error": "Only DOCX files are allowed"}), 400
+
         filename = secure_filename(file.filename)
         input_path = os.path.join(UPLOAD_FOLDER, filename)
+
         file.save(input_path)
 
-        output_path = os.path.join(OUTPUT_FOLDER, filename.rsplit(".", 1)[0] + "_output.docx")
+        output_filename = filename.rsplit(".", 1)[0] + "_output.docx"
+        output_path = os.path.join(OUTPUT_FOLDER, output_filename)
 
         print("=== FILE RECEIVED ===", filename)
         print("=== INPUT PATH ===", input_path)
+        print("=== OUTPUT PATH ===", output_path)
 
         process_file(input_path, output_path)
 
+        download_url = request.host_url.rstrip("/") + "/download/" + output_filename
+
         return jsonify({
             "message": "File processed successfully",
-            "download": f"/download/{os.path.basename(output_path)}"
+            "output_file": output_filename,
+            "download_url": download_url
         }), 200
 
     except Exception as e:
@@ -69,7 +74,11 @@ def upload_file():
 @app.route("/download/<path:filename>")
 def download_file(filename):
     try:
-        return send_from_directory(OUTPUT_FOLDER, filename, as_attachment=True)
+        return send_from_directory(
+            OUTPUT_FOLDER,
+            filename,
+            as_attachment=True
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 404
 
