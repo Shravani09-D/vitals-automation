@@ -1,11 +1,152 @@
-/* ===== NAVBAR ===== */
-.navbar {
+.page {
+  min-height: calc(100vh - 60px);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  background: #0b1a3a;
-  padding: 12px 30px;
+  background: #f4f6f9;
+  font-family: "Times New Roman", serif;
+  padding: 20px;
+}
+
+.upload-card {
+  width: 420px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.upload-card h2 {
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.sub-text {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 15px;
+}
+
+input[type="file"] {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  min-height: 46px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: #1a73e8;
   color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover:not(:disabled) {
+  background: #155cc0;
+}
+
+button:disabled {
+  background: #8bb9f1;
+  cursor: not-allowed;
+}
+
+.success-box {
+  margin-top: 20px;
+  padding: 12px;
+  background: #eaf7ea;
+  border: 1px solid #b7dfb7;
+  border-radius: 8px;
+  color: #1f6b1f;
+}
+
+.error-box {
+  margin-top: 20px;
+  padding: 12px;
+  background: #fdeaea;
+  border: 1px solid #f1b5b5;
+  border-radius: 8px;
+  color: #b30000;
+}
+
+a {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.toast.success {
+  background: #16a34a;
+}
+
+.toast.error {
+  background: #dc2626;
+}
+
+.loader {
+  width: 18px;
+  height: 18px;
+  border: 3px solid white;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ===== NAVBAR (matching your theme) ===== */
+.navbar {
+  width: 100%;
+  background: #0b1a3a;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
 }
 
 .logo-section {
@@ -14,116 +155,28 @@
 }
 
 .logo {
-  height: 45px;
+  height: 40px;
   margin-right: 10px;
 }
 
 .brand {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
 }
 
-.nav-links a {
-  margin-left: 20px;
-  color: white;
-  text-decoration: none;
-}
-
-.nav-links a:hover {
-  color: #ffd700;
-}
-
-/* ===== PAGE ===== */
-.page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
-  background: #f5f7fa;
-}
-
-/* ===== UPLOAD CARD ===== */
-.upload-card {
-  background: white;
-  padding: 30px;
-  width: 350px;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.sub-text {
-  font-size: 14px;
-  color: gray;
-  margin-bottom: 15px;
-}
-
-/* ===== BUTTON ===== */
-button {
-  margin-top: 15px;
-  padding: 10px;
+/* ===== FOOTER (same theme) ===== */
+.footer {
   width: 100%;
   background: #0b1a3a;
   color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1c2f6b;
-}
-
-/* ===== LOADER ===== */
-.loader {
-  border: 3px solid #fff;
-  border-top: 3px solid #ffd700;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-}
-
-@keyframes spin {
-  100% { transform: rotate(360deg); }
-}
-
-/* ===== SUCCESS & ERROR ===== */
-.success-box {
-  margin-top: 15px;
-  color: green;
-}
-
-.error-box {
-  margin-top: 15px;
-  color: red;
-}
-
-/* ===== TOAST ===== */
-.toast {
-  position: fixed;
-  top: 70px;
-  right: 20px;
-  padding: 10px 20px;
-  border-radius: 5px;
-  color: white;
-}
-
-.toast.success {
-  background: green;
-}
-
-.toast.error {
-  background: red;
-}
-
-/* ===== FOOTER ===== */
-.footer {
   text-align: center;
-  padding: 10px;
-  background: #0b1a3a;
-  color: white;
+  padding: 8px;
   position: fixed;
   bottom: 0;
-  width: 100%;
+}
+
+/* ===== FIX SPACING (IMPORTANT) ===== */
+.page {
+  padding-top: 70px;   /* space for navbar */
+  padding-bottom: 50px; /* space for footer */
 }
