@@ -176,7 +176,3 @@ a:hover {
 }
 
 /* ===== FIX SPACING (IMPORTANT) ===== */
-.page {
-  padding-top: 70px;   /* space for navbar */
-  padding-bottom: 50px; /* space for footer */
-}
