@@ -64,23 +64,19 @@ export class UploadComponent {
         })
       )
       .subscribe({
-        next: (response: UploadResponse) => {
+        next: async (response: UploadResponse) => {
           console.log('Upload success:', response);
 
           this.message = response.message || 'File processed successfully.';
           this.outputFile = response.output_file || '';
           this.downloadUrl = response.download_url || '';
 
-          if (this.downloadUrl) {
-            this.downloadFile(this.downloadUrl, this.outputFile);
+          if (this.downloadUrl && this.outputFile) {
+            await this.downloadFile(this.downloadUrl, this.outputFile);
+            this.showToast(`Downloaded: ${this.outputFile}`, 'success');
+          } else {
+            this.showToast('File processed but download link is missing.', 'error');
           }
-
-          this.showToast(
-            this.outputFile
-              ? `Downloaded: ${this.outputFile}`
-              : 'File processed successfully.',
-            'success'
-          );
 
           this.resetFileInput();
         },
@@ -93,18 +89,43 @@ export class UploadComponent {
       });
   }
 
-  downloadFile(url: string, filename?: string): void {
-  const link = document.createElement('a');
-  link.href = url;
+  async downloadFile(url: string, filename?: string): Promise<void> {
+    try {
+      const response = await fetch(url);
 
-  if (filename) {
-    link.download = filename;
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'output.docx';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      this.showToast('Download failed.', 'error');
+    }
   }
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+  downloadAgain(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+
+    if (this.downloadUrl && this.outputFile) {
+      this.downloadFile(this.downloadUrl, this.outputFile);
+    } else {
+      this.showToast('No file available to download again.', 'error');
+    }
+  }
 
   showToast(message: string, type: 'success' | 'error'): void {
     this.toastMessage = message;

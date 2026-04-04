@@ -45,18 +45,15 @@ def upload_file():
 
         filename = secure_filename(file.filename)
         input_path = os.path.join(UPLOAD_FOLDER, filename)
-
         file.save(input_path)
 
         output_filename = filename.rsplit(".", 1)[0] + "_output.docx"
         output_path = os.path.join(OUTPUT_FOLDER, output_filename)
 
-        print("=== FILE RECEIVED ===", filename)
-        print("=== INPUT PATH ===", input_path)
-        print("=== OUTPUT PATH ===", output_path)
-
         process_file(input_path, output_path)
 
+        scheme = request.headers.get("X-Forwarded-Proto", request.scheme)
+        host = request.headers.get("Host", request.host)
         download_url = request.host_url.rstrip("/") + "/download/" + output_filename
 
         return jsonify({
