@@ -14,7 +14,7 @@ body {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: #4bf9c8;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: "Segoe UI", Arial, sans-serif;
   color: #334155;
 }
